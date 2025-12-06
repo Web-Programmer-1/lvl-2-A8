@@ -12,7 +12,7 @@ export default function MCQAnalysisBD() {
       {/* Navbar */}
 
 
-     <Navbar></Navbar>
+
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-4 sm:px-6 lg:px-8">
@@ -182,53 +182,7 @@ export default function MCQAnalysisBD() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
-            <div className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="bg-green-800 p-2 rounded-lg">
-                  <BarChart3 className="h-6 w-6 text-white" />
-                </div>
-                <span className="text-xl font-bold">MCQ Analysis BD</span>
-              </div>
-              <p className="text-gray-400">Empowering students with smart analytics for better exam performance.</p>
-            </div>
 
-            <div>
-              <h4 className="font-bold mb-4">Product</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-green-400 transition">Features</a></li>
-                <li><Link href={'/about'} className="hover:text-green-400 transition">About</Link></li>
-                <li><a href="#" className="hover:text-green-400 transition">Pricing</a></li>
-                <li><a href="#" className="hover:text-green-400 transition">Demo</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-4">Company</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-green-400 transition">About Us</a></li>
-                <li><a href="#" className="hover:text-green-400 transition">Contact</a></li>
-                <li><a href="#" className="hover:text-green-400 transition">Blog</a></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-bold mb-4">Legal</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-green-400 transition">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-green-400 transition">Terms of Service</a></li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-800 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 MCQ Analysis BD. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
