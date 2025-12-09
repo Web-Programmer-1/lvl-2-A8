@@ -1,10 +1,17 @@
 
 
-
 "use client";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
-import { Menu, X, BarChart3, User, LogOut } from "lucide-react";
+import {
+  Menu,
+  X,
+  BarChart3,
+  User,
+  LogOut,
+  FileSliders,
+} from "lucide-react";
+import Swal from "sweetalert2";
 
 interface UserData {
   id: string;
@@ -23,6 +30,8 @@ function getCookie(name: string): string | null {
   return null;
 }
 
+const Backend_BASE_URL = process.env.NEXT_PUBLIC_BASE_URL!;
+
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
@@ -31,42 +40,94 @@ export default function Navbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navLinks = [
-    { name: "Guideline Hub", href: "/guide" },
-    { name: "How It Works", href: "/#how-it-works" },
+    { name: "Home", href: "/" },
+    { name: "Our Book's", href: "/#how-it-works" },
+    { name: "How It Works", href: "/#why-us" },
     { name: "Why Us", href: "/#why-us" },
     { name: "About", href: "/about" },
   ];
 
-  // Fetch user profile
+  // ⭐⭐⭐ SWEETALERT LOGOUT HANDLER ⭐⭐⭐
+  const handleLogout = async () => {
+    const result = await Swal.fire({
+      title: "Logout?",
+      text: "Do you really want to logout?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Logout",
+    });
+
+    if (!result.isConfirmed) return;
+
+    Swal.fire({
+      title: "Logging out...",
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading(),
+    });
+
+    try {
+      const accessToken = getCookie("access_token");
+
+      if (accessToken) {
+        await fetch(`${Backend_BASE_URL}/user/logout`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: accessToken,
+          },
+        });
+      }
+
+      // Delete cookie
+      document.cookie = "access_token=; Max-Age=0; path=/;";
+
+      Swal.fire({
+        icon: "success",
+        title: "Logged out successfully!",
+        timer: 1500,
+        showConfirmButton: false,
+      }).then(() => {
+        window.location.href = "/login";
+      });
+    } catch (error) {
+      console.error("Error during logout:", error);
+
+      Swal.fire({
+        icon: "error",
+        title: "Logout Failed",
+        text: "Something went wrong. Please try again.",
+      });
+    }
+  };
+
+  // Fetch user info
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
         const accessToken = getCookie("access_token");
-        
+
         if (!accessToken) {
           setLoading(false);
           return;
         }
 
-        const response = await fetch(
-          "https://mcq-analysis.vercel.app/api/v1/user/auth",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: accessToken,
-            },
-          }
-        );
+        const response = await fetch(`${Backend_BASE_URL}/user/auth`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: accessToken,
+          },
+        });
 
         const data = await response.json();
-        console.log("Navbar API Response:", data);
 
         if (response.ok && data.success && data.data) {
           setUser(data.data);
         }
       } catch (error) {
-        console.error("Error fetching user profile:", error);
+        console.error("Profile fetch error:", error);
       } finally {
         setLoading(false);
       }
@@ -75,7 +136,7 @@ export default function Navbar() {
     fetchUserProfile();
   }, []);
 
-  // Close dropdown when clicking outside
+  // Click outside to close profile dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -87,29 +148,18 @@ export default function Navbar() {
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Logout handler
-  const handleLogout = () => {
-    // Clear cookies
-    document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    
-    setUser(null);
-    setProfileDropdownOpen(false);
-    window.location.href = "/login";
-  };
-
-  // Get user initials for avatar
-  const getUserInitials = (name: string) => {
-    return name
+  // User initials
+  const getUserInitials = (name: string) =>
+    name
       .split(" ")
       .map((n) => n[0])
       .join("")
       .toUpperCase()
       .slice(0, 2);
-  };
 
   return (
     <nav className="bg-white/80 backdrop-blur-md shadow-sm fixed w-full top-0 z-50">
@@ -137,14 +187,15 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Authentication Section */}
+            {/* AUTH SECTION */}
             {loading ? (
               <div className="w-10 h-10 rounded-full bg-gray-200 animate-pulse"></div>
             ) : user ? (
-              // Logged in user - Profile Dropdown
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  onClick={() =>
+                    setProfileDropdownOpen(!profileDropdownOpen)
+                  }
                   className="flex items-center space-x-3 hover:opacity-80 transition"
                 >
                   <div className="w-10 h-10 rounded-full bg-green-800 flex items-center justify-center text-white font-semibold">
@@ -160,17 +211,39 @@ export default function Navbar() {
                   </div>
                 </button>
 
-                {/* Dropdown Menu */}
                 {profileDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border py-2">
                     <Link
                       href="/profile"
-                      onClick={() => setProfileDropdownOpen(false)}
                       className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition"
                     >
                       <User className="w-5 h-5 text-green-800" />
                       <span className="text-gray-700">My Profile</span>
                     </Link>
+                    <Link
+                      href="/test"
+                      className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition"
+                    >
+                      <User className="w-5 h-5 text-green-800" />
+                      <span className="text-gray-700">My Test</span>
+                    </Link>
+
+                    <Link
+                      href="/guideline"
+                      className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition"
+                    >
+                      <FileSliders className="w-5 h-5 text-green-800" />
+                      <span className="text-gray-700">Guideline Hub</span>
+                    </Link>
+
+                    <Link
+                      href="/exam"
+                      className="flex items-center space-x-3 px-4 py-3 hover:bg-gray-50 transition"
+                    >
+                      <FileSliders className="w-5 h-5 text-green-800" />
+                      <span className="text-gray-700">Exam Hub</span>
+                    </Link>
+
                     <button
                       onClick={handleLogout}
                       className="w-full flex items-center space-x-3 px-4 py-3 hover:bg-red-50 transition text-left"
@@ -182,7 +255,6 @@ export default function Navbar() {
                 )}
               </div>
             ) : (
-              // Not logged in - Show Login/Register
               <div className="flex items-center space-x-4">
                 <Link
                   href="/login"
@@ -213,7 +285,7 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* MOBILE MENU DROPDOWN */}
+        {/* MOBILE DROPDOWN */}
         {mobileMenuOpen && (
           <div className="md:hidden py-4 space-y-3 bg-white border-t">
             {navLinks.map((link, index) => (
@@ -227,41 +299,15 @@ export default function Navbar() {
               </Link>
             ))}
 
-            {/* Mobile Authentication */}
+            {/* MOBILE AUTH */}
             {loading ? (
               <div className="px-4 py-2">
                 <div className="w-full h-10 bg-gray-200 rounded-lg animate-pulse"></div>
               </div>
             ) : user ? (
               <>
-                <div className="px-4 py-2 border-t border-gray-200">
-                  <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 rounded-full bg-green-800 flex items-center justify-center text-white font-semibold">
-                      {getUserInitials(user.name)}
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        {user.email || user.phone_number}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <Link
-                  href="/my-profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:text-green-800 transition"
-                >
-                  <User className="w-5 h-5" />
-                  <span>My Profile</span>
-                </Link>
                 <button
-                  onClick={() => {
-                    handleLogout();
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={handleLogout}
                   className="w-full flex items-center space-x-3 px-4 py-2 text-red-600 hover:bg-red-50 transition text-left"
                 >
                   <LogOut className="w-5 h-5" />
@@ -292,3 +338,7 @@ export default function Navbar() {
     </nav>
   );
 }
+
+
+
+

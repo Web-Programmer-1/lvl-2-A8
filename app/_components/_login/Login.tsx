@@ -113,6 +113,9 @@ import {
 } from "lucide-react";
 import Swal from "sweetalert2";
 
+
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 const Login: React.FC = () => {
   const router = useRouter();
 
@@ -184,7 +187,7 @@ const Login: React.FC = () => {
 
     try {
       const res = await fetch(
-        "https://mcq-analysis.vercel.app/api/v1/user/login",
+        `${BASE_URL}/user/login`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
