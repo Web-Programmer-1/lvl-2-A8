@@ -14,7 +14,7 @@ Video guidelines and tutorials
 Digital books and study resources
 Text-based guidelines and notes
 
-R
+
 Technology Stack
 -----------------
 Frontend:
